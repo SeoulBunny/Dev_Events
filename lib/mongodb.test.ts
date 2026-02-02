@@ -57,14 +57,14 @@ describe("connectDB", () => {
 
     it("should initialize global.mongooseCache if it doesn't exist", async () => {
       // Remove global cache
-      delete (global as any).mongooseCache;
+      delete (global as Record<string, unknown>).mongooseCache;
 
       // Mock successful connection
       (mongoose.connect as jest.Mock).mockResolvedValueOnce(mockMongooseInstance);
 
       // Dynamically import to trigger initialization
       jest.resetModules();
-      const { default: freshConnectDB } = await import("./mongodb");
+      await import("./mongodb");
 
       // Verify global cache is created
       expect(global.mongooseCache).toBeDefined();
@@ -210,7 +210,7 @@ describe("connectDB", () => {
   });
 
   describe("environment validation", () => {
-    it("should throw error if MONGODB_URI is not defined", () => {
+    it("should throw error if MONGODB_URI is not defined", async () => {
       // Remove MONGODB_URI
       delete process.env.MONGODB_URI;
 
@@ -218,9 +218,9 @@ describe("connectDB", () => {
       jest.resetModules();
 
       // Attempt to import should throw
-      expect(() => {
-        require("./mongodb");
-      }).toThrow("Please define the MONGODB_URI environment variable inside .env.local");
+      await expect(import("./mongodb")).rejects.toThrow(
+        "Please define the MONGODB_URI environment variable inside .env.local"
+      );
     });
   });
 });
