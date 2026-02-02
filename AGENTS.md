@@ -37,7 +37,7 @@ import { cn } from "@/lib/utils";
 ```
 
 ### Data Layer
-Currently static event data stored in `lib/constants.ts` as `EventItem[]` array. The branch `database-models` suggests migration to database models is planned.
+MongoDB/Mongoose models (`database/event.model.ts`, `database/booking.model.ts`) and connection helper (`lib/mongodb.ts`) have been added. The application currently still uses static event data from `lib/constants.ts` (`EventItem[]` array) - the new database models are present but not yet wired into the runtime.
 
 ### Key Components Architecture
 

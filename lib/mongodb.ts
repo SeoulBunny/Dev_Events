@@ -22,17 +22,17 @@ interface MongooseCache {
 // Extend the global namespace to include our cache
 declare global {
   // eslint-disable-next-line no-var
-  var mongoose: MongooseCache | undefined;
+  var mongooseCache: MongooseCache | undefined;
 }
 
 // Initialize the cache on the global object
-const cached: MongooseCache = global.mongoose || {
+const cached: MongooseCache = global.mongooseCache || {
   conn: null,
   promise: null,
 };
 
-if (!global.mongoose) {
-  global.mongoose = cached;
+if (!global.mongooseCache) {
+  global.mongooseCache = cached;
 }
 
 /**
