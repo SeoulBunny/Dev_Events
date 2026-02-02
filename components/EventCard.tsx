@@ -7,7 +7,7 @@ interface Props {
   location: string,
   slug: string,
   date: string,
-  time: number,
+  time: string,
 }
 const EventCard = ({ title, image, slug, location, date, time }: Props) => {
   return (
