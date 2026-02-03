@@ -1,3 +1,7 @@
+import BookEvent from "@/components/BookEvent";
+import EventCard from "@/components/EventCard";
+import { IEvent } from "@/database";
+import { getSimilarEventsBySlug } from "@/lib/actions/event.actions";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
@@ -64,6 +68,10 @@ const EventDetailsPage = async ({
 
   if (!description) return notFound();
 
+  const bookings = 10;
+
+  const similarEvents: IEvent[] = await getSimilarEventsBySlug(slug)
+
   return (
     <section id="event">
       <div className="header">
@@ -120,8 +128,23 @@ const EventDetailsPage = async ({
         </div>
         {/*right side */}
         <aside className="booking">
-          <p className="text-lg font-semibold">Book Event</p>
+          <div className="signup-card">
+            <h2>Book Your Spot</h2>
+            {bookings > 0 ? (
+              <p className="text-sm">Join {bookings} people who have already booked their spot!</p>) : (<p className="text-sm">Be the first to book your spot</p>)
+            }
+            <BookEvent />
+          </div>
         </aside>
+      </div>
+
+      <div className="flex w-full flex-col gap-4 pt-20">
+        <h2>Similar Events</h2>
+        <div className="events">
+          {similarEvents.length > 0 && similarEvents.map((similarEvent: IEvent) => (
+            <EventCard key={similarEvent.title} {...similarEvent} />
+          ))}
+        </div>
       </div>
     </section>
   );
