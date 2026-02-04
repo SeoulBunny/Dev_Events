@@ -4,8 +4,11 @@ import { IEvent } from "@/database";
 import { getSimilarEventsBySlug } from "@/lib/actions/event.actions";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+
+/* ---------------- small components ---------------- */
 
 const EventDetailItem = ({
   icon,
@@ -43,34 +46,55 @@ const EventTags = ({ tags }: { tags: string[] }) => (
   </div>
 );
 
+/* ---------------- Suspense-safe server component ---------------- */
+
+const SimilarEvents = async ({ slug }: { slug: string }) => {
+  const similarEvents: IEvent[] = await getSimilarEventsBySlug(slug);
+
+  if (!similarEvents.length) return null;
+
+  return (
+    <div className="events">
+      {similarEvents.map((similarEvent) => (
+        <EventCard key={similarEvent._id.toString()} {...similarEvent} />
+      ))}
+    </div>
+  );
+};
+
+/* ---------------- page ---------------- */
+
 const EventDetailsPage = async ({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) => {
   const { slug } = await params;
+
   const request = await fetch(`${BASE_URL}/api/events/${slug}`);
+  const { event: eventData } = await request.json();
+
+  if (!eventData) return notFound();
+
   const {
-    event: {
-      description,
-      image,
-      overview,
-      date,
-      time,
-      location,
-      mode,
-      agenda,
-      audience,
-      organizer,
-      tags,
-    },
-  } = await request.json();
+    id,
+    description,
+    image,
+    overview,
+    date,
+    time,
+    location,
+    mode,
+    agenda,
+    audience,
+    organizer,
+    tags,
+    slug: eventSlug,
+  } = eventData;
 
   if (!description) return notFound();
 
   const bookings = 10;
-
-  const similarEvents: IEvent[] = await getSimilarEventsBySlug(slug)
 
   return (
     <section id="event">
@@ -80,7 +104,7 @@ const EventDetailsPage = async ({
       </div>
 
       <div className="details">
-        {/*left side */}
+        {/* left */}
         <div className="content">
           <Image
             src={image}
@@ -103,13 +127,9 @@ const EventDetailsPage = async ({
               alt="calendar"
               label={date}
             />
-
             <EventDetailItem icon="/icons/clock.svg" alt="clock" label={time} />
-
             <EventDetailItem icon="/icons/pin.svg" alt="pin" label={location} />
-
             <EventDetailItem icon="/icons/mode.svg" alt="mode" label={mode} />
-
             <EventDetailItem
               icon="/icons/audience.svg"
               alt="audience"
@@ -126,25 +146,31 @@ const EventDetailsPage = async ({
 
           <EventTags tags={tags} />
         </div>
-        {/*right side */}
+
+        {/* right */}
         <aside className="booking">
           <div className="signup-card">
             <h2>Book Your Spot</h2>
             {bookings > 0 ? (
-              <p className="text-sm">Join {bookings} people who have already booked their spot!</p>) : (<p className="text-sm">Be the first to book your spot</p>)
-            }
-            <BookEvent />
+              <p className="text-sm">
+                Join {bookings} people who have already booked their spot!
+              </p>
+            ) : (
+              <p className="text-sm">Be the first to book your spot</p>
+            )}
+
+            <BookEvent eventId={id} slug={eventSlug} />
           </div>
         </aside>
       </div>
 
+      {/* Similar Events */}
       <div className="flex w-full flex-col gap-4 pt-20">
         <h2>Similar Events</h2>
-        <div className="events">
-          {similarEvents.length > 0 && similarEvents.map((similarEvent: IEvent) => (
-            <EventCard key={similarEvent.title} {...similarEvent} />
-          ))}
-        </div>
+
+        <Suspense fallback={<p>Loading similar events…</p>}>
+          <SimilarEvents slug={slug} />
+        </Suspense>
       </div>
     </section>
   );
